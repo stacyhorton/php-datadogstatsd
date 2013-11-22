@@ -223,15 +223,19 @@ class Datadogstatsd {
              . '?api_key='            . static::$__apiKey
              . '&application_key='    . static::$__applicationKey;
 
-        // Set up the http request. Need the PECL pecl_http extension
-        $r = new HttpRequest($url, HttpRequest::METH_POST);
-        $r->addHeaders(array('Content-Type' => 'application/json'));
-        $r->setBody($body);
+        $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $body);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+            'Content-Type: application/json',
+            'Content-Length: ' . strlen($body))
+        );
 
         // Send, suppressing and logging any http errors
         try {
-            $r->send();
-        } catch (HttpException $ex) {
+            $result = curl_exec($ch);
+        } catch ( \Exception $ex ) {
             error_log($ex);
         }
     }
